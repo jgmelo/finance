@@ -21,15 +21,25 @@ def build_portfolio(crypto_reference, crypto_purchases, asset, crypto_sales=None
         ``[reais_buy, asset_buy_value, sale_date, sale_price]`` as value. ``sale_date`` and
         ``sale_price`` will be ``None`` when no matching sale is found.
     """
-    # Create a mapping of dates to asset values
-    date_to_asset = {entry["Data"]: entry[asset] for entry in crypto_reference.values()}
+    # Create a mapping of dates to asset values from the reference dataset when
+    # the requested ``asset`` key exists there. Otherwise, the asset value will
+    # be pulled directly from the purchase entry.
+    date_to_asset = {
+        entry["Data"]: entry.get(asset)
+        for entry in crypto_reference.values()
+        if asset in entry
+    }
 
     # Build portfolio dictionary
     portfolio = {}
     for purchase_id, entry in crypto_purchases.items():
         date = entry["Data"]
         reais = entry["Reais"]
-        asset_value = date_to_asset.get(date, None)  # Get asset points/amount for the same date
+        # Prefer the asset value from the purchase entry when available;
+        # fall back to the reference dataset otherwise.
+        asset_value = entry.get(asset)
+        if asset_value is None:
+            asset_value = date_to_asset.get(date)
 
         sale_date = None
         sale_price = None
