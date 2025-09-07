@@ -6,49 +6,70 @@ from data import *
 crypto_reference = crypto_reference_jvm
 crypto_purchases = crypto_jvm
 
-def build_portfolio(crypto_reference, crypto_purchases, asset):
-    """
-    Builds a portfolio dictionary using investment data from crypto_purchases and IBOVESPA data from crypto_reference.
+def build_portfolio(crypto_reference, crypto_purchases, asset, crypto_sales=None):
+    """Build a portfolio dictionary from purchase and optional sale data.
 
-    :param crypto_reference: Dictionary mapping reference IDs to IBOVESPA points and dates.
-    :param crypto_purchases: Dictionary mapping investment IDs to the amount in Reais and investment date.
-    :return: Dictionary with date as key and [Reais, B3 points] as value.
+    Args:
+        crypto_reference: Dictionary mapping reference IDs to asset values and dates.
+        crypto_purchases: Dictionary mapping purchase IDs to amounts in Reais and purchase dates.
+        asset: Key within the reference dictionaries representing the asset value to track
+               (e.g. "B3", "CDI", "Bitcoin").
+        crypto_sales: Optional dictionary mapping purchase IDs to sale information.
+
+    Returns:
+        Dictionary with purchase date (``YYYY-MM-DD``) as key and
+        ``[reais_buy, asset_buy_value, sale_date, sale_price]`` as value. ``sale_date`` and
+        ``sale_price`` will be ``None`` when no matching sale is found.
     """
     # Create a mapping of dates to asset values
     date_to_asset = {entry["Data"]: entry[asset] for entry in crypto_reference.values()}
-    
+
     # Build portfolio dictionary
     portfolio = {}
-    for entry in crypto_purchases.values():
+    for purchase_id, entry in crypto_purchases.items():
         date = entry["Data"]
         reais = entry["Reais"]
-        asset_value = date_to_asset.get(date, None)  # Get asset points for the same date
+        asset_value = date_to_asset.get(date, None)  # Get asset points/amount for the same date
+
+        sale_date = None
+        sale_price = None
+        if crypto_sales is not None:
+            sale_entry = crypto_sales.get(purchase_id)
+            if sale_entry:
+                sale_date = sale_entry["Data"].strftime("%Y-%m-%d")
+                sale_price = sale_entry.get("Reais")
 
         if asset_value is not None:  # Ensure there's a valid asset value
-            portfolio[date.strftime("%Y-%m-%d")] = [reais, asset_value]
+            portfolio[date.strftime("%Y-%m-%d")] = [reais, asset_value, sale_date, sale_price]
 
     return portfolio
 
 def calculate_appreciation_asset(portfolio, today_asset_value):
     """
     Calculates:
-      - IBOVESPA appreciation per date.
-      - Total weighted IBOVESPA appreciation using investment amounts as weights.
+      - Asset appreciation per date.
+      - Total weighted asset appreciation using investment amounts as weights.
 
-    :param portfolio: Dictionary where keys are dates (YYYY-MM-DD),
-                      and values are lists [Reais, Asset Amount].
-    :param today_asset_value: Asset value points for today.
-    :return: Tuple containing:
-        - Dictionary with asset appreciation per date.
-        - Total weighted asset appreciation (percentage).
+    Args:
+        portfolio: Dictionary where keys are dates (``YYYY-MM-DD``) and values are
+            ``[Reais, Asset Amount, sale_date, sale_price]``. Only the first two
+            elements are used for appreciation calculations.
+        today_asset_value: Asset value points for today.
+
+    Returns:
+        Tuple containing:
+            - Dictionary with asset appreciation per date.
+            - Total weighted asset appreciation (percentage).
     """
     appreciation_per_date = {}
     weighted_sum = 0
     total_investment = 0
-    
-    for date, (reais, asset_amount) in portfolio.items():
+
+    for date, values in portfolio.items():
+        reais = values[0]
+        asset_amount = values[1]
         asset_value = asset_amount / reais
-        appreciation = (today_asset_value / (1/asset_value))
+        appreciation = (today_asset_value / (1 / asset_value))
         appreciation_per_date[date] = appreciation
 
         # Compute weighted appreciation
@@ -65,18 +86,24 @@ def calculate_appreciation_index(portfolio, today_index_value):
       - Index appreciation per date.
       - Total weighted Index appreciation using investment amounts as weights.
 
-    :param portfolio: Dictionary where keys are dates (YYYY-MM-DD),
-                      and values are lists [Reais, Index points].
-    :param today_index_value: Index quotation for today.
-    :return: Tuple containing:
-        - Dictionary with Index appreciation per date.
-        - Total weighted Index appreciation (percentage).
+    Args:
+        portfolio: Dictionary where keys are dates (``YYYY-MM-DD``) and values are
+            ``[Reais, Index points, sale_date, sale_price]``. Only the first two
+            elements are used for appreciation calculations.
+        today_index_value: Index quotation for today.
+
+    Returns:
+        Tuple containing:
+            - Dictionary with Index appreciation per date.
+            - Total weighted Index appreciation (percentage).
     """
     appreciation_per_date = {}
     weighted_sum = 0
     total_investment = 0
-    
-    for date, (reais, index_value) in portfolio.items():
+
+    for date, values in portfolio.items():
+        reais = values[0]
+        index_value = values[1]
         appreciation = (today_index_value / index_value)
         appreciation_per_date[date] = appreciation
 
