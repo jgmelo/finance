@@ -45,73 +45,84 @@ def build_portfolio(crypto_reference, crypto_purchases, asset, crypto_sales=None
     return portfolio
 
 def calculate_appreciation_asset(portfolio, today_asset_value):
-    """
+    """Calculate asset appreciation.
+
     Calculates:
       - Asset appreciation per date.
       - Total weighted asset appreciation using investment amounts as weights.
+        Sold investments are excluded from the weighted average, and their
+        appreciation is based on the ``sale_price`` instead of the current
+        ``today_asset_value``.
 
     Args:
         portfolio: Dictionary where keys are dates (``YYYY-MM-DD``) and values are
-            ``[Reais, Asset Amount, sale_date, sale_price]``. Only the first two
-            elements are used for appreciation calculations.
-        today_asset_value: Asset value points for today.
+            ``[purchase_price, asset_value_at_purchase, sale_date, sale_price]``.
+        today_asset_value: Current asset value in Reais.
 
     Returns:
         Tuple containing:
             - Dictionary with asset appreciation per date.
-            - Total weighted asset appreciation (percentage).
+            - Total weighted asset appreciation (percentage). Returns ``0`` when
+              there are no active investments.
     """
     appreciation_per_date = {}
     weighted_sum = 0
     total_investment = 0
 
-    for date, values in portfolio.items():
-        reais = values[0]
-        asset_amount = values[1]
-        asset_value = asset_amount / reais
-        appreciation = (today_asset_value / (1 / asset_value))
+    for date, (purchase_price, _asset_value, sale_date, sale_price) in portfolio.items():
+        if sale_price is not None:
+            appreciation = sale_price / purchase_price
+        else:
+            appreciation = today_asset_value / purchase_price
+            weighted_sum += purchase_price * appreciation
+            total_investment += purchase_price
+
         appreciation_per_date[date] = appreciation
 
-        # Compute weighted appreciation
-        weighted_sum += reais * appreciation
-        total_investment += reais
-
-    weighted_appreciation = weighted_sum / total_investment
+    weighted_appreciation = (
+        weighted_sum / total_investment if total_investment else 0
+    )
 
     return appreciation_per_date, weighted_appreciation
 
 def calculate_appreciation_index(portfolio, today_index_value):
-    """
+    """Calculate index appreciation.
+
     Calculates:
       - Index appreciation per date.
-      - Total weighted Index appreciation using investment amounts as weights.
+      - Total weighted index appreciation using investment amounts as weights.
+        Sold investments are excluded from the weighted average, and their
+        appreciation is based on the ``sale_price`` instead of the current
+        ``today_index_value``.
 
     Args:
         portfolio: Dictionary where keys are dates (``YYYY-MM-DD``) and values are
-            ``[Reais, Index points, sale_date, sale_price]``. Only the first two
-            elements are used for appreciation calculations.
-        today_index_value: Index quotation for today.
+            ``[purchase_price, index_points_at_purchase, sale_date, sale_price]``.
+        today_index_value: Current index quotation in Reais.
 
     Returns:
         Tuple containing:
-            - Dictionary with Index appreciation per date.
-            - Total weighted Index appreciation (percentage).
+            - Dictionary with index appreciation per date.
+            - Total weighted index appreciation (percentage). Returns ``0`` when
+              there are no active investments.
     """
     appreciation_per_date = {}
     weighted_sum = 0
     total_investment = 0
 
-    for date, values in portfolio.items():
-        reais = values[0]
-        index_value = values[1]
-        appreciation = (today_index_value / index_value)
+    for date, (purchase_price, _index_value, sale_date, sale_price) in portfolio.items():
+        if sale_price is not None:
+            appreciation = sale_price / purchase_price
+        else:
+            appreciation = today_index_value / purchase_price
+            weighted_sum += purchase_price * appreciation
+            total_investment += purchase_price
+
         appreciation_per_date[date] = appreciation
 
-        # Compute weighted appreciation
-        weighted_sum += reais * appreciation
-        total_investment += reais
-
-    weighted_appreciation = weighted_sum / total_investment
+    weighted_appreciation = (
+        weighted_sum / total_investment if total_investment else 0
+    )
 
     return appreciation_per_date, weighted_appreciation
 
