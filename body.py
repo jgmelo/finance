@@ -60,9 +60,8 @@ def calculate_appreciation_asset(portfolio, today_asset_value):
     Calculates:
       - Asset appreciation per date.
       - Total weighted asset appreciation using investment amounts as weights.
-        Sold investments are excluded from the weighted average, and their
-        appreciation is based on the ``sale_price`` instead of the current
-        ``today_asset_value``.
+        Sold investments contribute their realized ``sale_price`` appreciation;
+        unsold investments use the current ``today_asset_value``.
 
     Args:
         portfolio: Dictionary where keys are dates (``YYYY-MM-DD``) and values are
@@ -73,7 +72,7 @@ def calculate_appreciation_asset(portfolio, today_asset_value):
         Tuple containing:
             - Dictionary with asset appreciation per date.
             - Total weighted asset appreciation (percentage). Returns ``0`` when
-              there are no active investments.
+              the portfolio is empty.
     """
     appreciation_per_date = {}
     weighted_sum = 0
@@ -84,9 +83,9 @@ def calculate_appreciation_asset(portfolio, today_asset_value):
             appreciation = sale_price / purchase_price
         else:
             appreciation = today_asset_value / purchase_price
-            weighted_sum += purchase_price * appreciation
-            total_investment += purchase_price
 
+        weighted_sum += purchase_price * appreciation
+        total_investment += purchase_price
         appreciation_per_date[date] = appreciation
 
     weighted_appreciation = (
@@ -101,9 +100,8 @@ def calculate_appreciation_index(portfolio, today_index_value):
     Calculates:
       - Index appreciation per date.
       - Total weighted index appreciation using investment amounts as weights.
-        Sold investments are excluded from the weighted average, and their
-        appreciation is based on the ``sale_price`` instead of the current
-        ``today_index_value``.
+        Sold investments contribute their realized ``sale_price`` appreciation;
+        unsold investments use the current ``today_index_value``.
 
     Args:
         portfolio: Dictionary where keys are dates (``YYYY-MM-DD``) and values are
@@ -114,7 +112,7 @@ def calculate_appreciation_index(portfolio, today_index_value):
         Tuple containing:
             - Dictionary with index appreciation per date.
             - Total weighted index appreciation (percentage). Returns ``0`` when
-              there are no active investments.
+              the portfolio is empty.
     """
     appreciation_per_date = {}
     weighted_sum = 0
@@ -125,9 +123,9 @@ def calculate_appreciation_index(portfolio, today_index_value):
             appreciation = sale_price / purchase_price
         else:
             appreciation = today_index_value / purchase_price
-            weighted_sum += purchase_price * appreciation
-            total_investment += purchase_price
 
+        weighted_sum += purchase_price * appreciation
+        total_investment += purchase_price
         appreciation_per_date[date] = appreciation
 
     weighted_appreciation = (
