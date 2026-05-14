@@ -34,6 +34,9 @@ def parse_args():
     parser.set_defaults(show_sales=True)
     parser.add_argument("--sales-limit", type=int, default=2,
                         help="How many sample sale entries to print.")
+    parser.add_argument("--verbose-avg", action="store_true",
+                        help="Show the per-entry breakdown of the unsold-BTC "
+                             "weighted-average price calculation.")
     return parser.parse_args()
 
 
@@ -81,7 +84,8 @@ def main():
         print("Bitcoin:")
         print_appreciation_table(appreciation_per_date_btc, weighted_btc)
 
-        avg_unsold_price = weighted_unsold_btc_price(crypto_purchases, crypto_sales)
+        avg_unsold_price = weighted_unsold_btc_price(
+            crypto_purchases, crypto_sales, verbose=args.verbose_avg)
         print(f"Preço médio ponderado (posições não vendidas): "
               f"{avg_unsold_price:.2f} BRL/BTC\n")
 

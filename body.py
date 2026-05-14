@@ -94,27 +94,52 @@ def calculate_appreciation_asset(portfolio, today_asset_value):
 
     return appreciation_per_date, weighted_appreciation
 
-def weighted_unsold_btc_price(crypto_purchases, crypto_sales=None):
+def weighted_unsold_btc_price(crypto_purchases, crypto_sales=None, verbose=False):
     """Weighted-average BTC buy price across unsold positions.
 
     Σ(bitcoin_i × price_i) / Σ(bitcoin_i), restricted to purchases without a
     matching entry in ``crypto_sales``.
 
-    Returns ``0`` when there are no unsold positions.
+    Returns ``0`` when there are no unsold positions. When ``verbose`` is true,
+    prints each purchase that was considered or discarded and the running
+    numerator/denominator of the weighted average.
     """
     sales = crypto_sales or {}
     total_btc = 0
     weighted_sum = 0
+    if verbose:
+        print("Cálculo do preço médio ponderado (não vendidos):")
+        header = f"  {'ID':<12} {'BTC':>12} {'Preço BTC':>14} {'Status':<24}"
+        print(header)
+        print("  " + "-" * (len(header) - 2))
     for purchase_id, entry in crypto_purchases.items():
-        if purchase_id in sales:
-            continue
         btc = entry.get("Bitcoin")
         price = entry.get("Preço BTC")
-        if btc is None or price is None:
-            continue
-        weighted_sum += btc * price
-        total_btc += btc
-    return weighted_sum / total_btc if total_btc else 0
+        if purchase_id in sales:
+            status = "descartado (vendido)"
+            included = False
+        elif btc is None or price is None:
+            status = "descartado (dados ausentes)"
+            included = False
+        else:
+            status = "considerado"
+            included = True
+
+        if verbose:
+            btc_str = f"{btc:.8f}" if btc is not None else "—"
+            price_str = f"{price:.2f}" if price is not None else "—"
+            print(f"  {purchase_id:<12} {btc_str:>12} {price_str:>14} {status:<24}")
+
+        if included:
+            weighted_sum += btc * price
+            total_btc += btc
+
+    avg = weighted_sum / total_btc if total_btc else 0
+    if verbose:
+        print(f"  Σ(BTC × Preço) = {weighted_sum:.2f} BRL")
+        print(f"  Σ(BTC)         = {total_btc:.8f} BTC")
+        print(f"  Média ponderada = {avg:.2f} BRL/BTC\n")
+    return avg
 
 def calculate_appreciation_index(portfolio, today_index_value):
     """Calculate index appreciation.
