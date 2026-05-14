@@ -81,6 +81,10 @@ def main():
         print("Bitcoin:")
         print_appreciation_table(appreciation_per_date_btc, weighted_btc)
 
+        avg_unsold_price = weighted_unsold_btc_price(crypto_purchases, crypto_sales)
+        print(f"Preço médio ponderado (posições não vendidas): "
+              f"{avg_unsold_price:.2f} BRL/BTC\n")
+
     if args.show_sales:
         print("Sample sale entries:")
         for pid, sale in list(crypto_sales.items())[:args.sales_limit]:

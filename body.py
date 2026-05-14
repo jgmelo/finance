@@ -94,6 +94,28 @@ def calculate_appreciation_asset(portfolio, today_asset_value):
 
     return appreciation_per_date, weighted_appreciation
 
+def weighted_unsold_btc_price(crypto_purchases, crypto_sales=None):
+    """Weighted-average BTC buy price across unsold positions.
+
+    Σ(bitcoin_i × price_i) / Σ(bitcoin_i), restricted to purchases without a
+    matching entry in ``crypto_sales``.
+
+    Returns ``0`` when there are no unsold positions.
+    """
+    sales = crypto_sales or {}
+    total_btc = 0
+    weighted_sum = 0
+    for purchase_id, entry in crypto_purchases.items():
+        if purchase_id in sales:
+            continue
+        btc = entry.get("Bitcoin")
+        price = entry.get("Preço BTC")
+        if btc is None or price is None:
+            continue
+        weighted_sum += btc * price
+        total_btc += btc
+    return weighted_sum / total_btc if total_btc else 0
+
 def calculate_appreciation_index(portfolio, today_index_value):
     """Calculate index appreciation.
 
