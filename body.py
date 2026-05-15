@@ -109,12 +109,14 @@ def weighted_unsold_btc_price(crypto_purchases, crypto_sales=None, verbose=False
     weighted_sum = 0
     if verbose:
         print("Cálculo do preço médio ponderado (não vendidos):")
-        header = f"  {'ID':<12} {'BTC':>12} {'Preço BTC':>14} {'Status':<24}"
+        header = (f"  {'ID':<12} {'BTC':>12} {'Preço BTC':>14} "
+                  f"{'BTC × Preço':>14} {'Reais':>10} {'Status':<24}")
         print(header)
         print("  " + "-" * (len(header) - 2))
     for purchase_id, entry in crypto_purchases.items():
         btc = entry.get("Bitcoin")
         price = entry.get("Preço BTC")
+        reais = entry.get("Reais")
         if purchase_id in sales:
             status = "descartado (vendido)"
             included = False
@@ -128,7 +130,10 @@ def weighted_unsold_btc_price(crypto_purchases, crypto_sales=None, verbose=False
         if verbose:
             btc_str = f"{btc:.8f}" if btc is not None else "—"
             price_str = f"{price:.2f}" if price is not None else "—"
-            print(f"  {purchase_id:<12} {btc_str:>12} {price_str:>14} {status:<24}")
+            product_str = f"{btc * price:.2f}" if btc is not None and price is not None else "—"
+            reais_str = f"{reais:.2f}" if reais is not None else "—"
+            print(f"  {purchase_id:<12} {btc_str:>12} {price_str:>14} "
+                  f"{product_str:>14} {reais_str:>10} {status:<24}")
 
         if included:
             weighted_sum += btc * price
