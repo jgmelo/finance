@@ -77,34 +77,9 @@ crypto_jvm = {
 }
 
 crypto_sales = {
-    'COMPRA_001': {
-        'Data'     : datetime.strptime("2025-04-30 12:00:00", "%Y-%m-%d %H:%M:%S"),
-        'Reais'    : 1159.53,
-        'Bitcoin'  : 0.00165647,
-        'Preço BTC': 700000.0,
-    },
-    'COMPRA_002': {
-        'Data'     : datetime.strptime("2025-05-15 12:00:00", "%Y-%m-%d %H:%M:%S"),
-        'Reais'    : 1039.71,
-        'Bitcoin'  : 0.00159955,
-        'Preço BTC': 650000.0,
-    },
-    'COMPRA_003': {
-        'Data'     : datetime.strptime("2025-05-20 12:00:00", "%Y-%m-%d %H:%M:%S"),
-        'Reais'    : 1222.27,
-        'Bitcoin'  : 0.00179745,
-        'Preço BTC': 680000.0,
-    },
-    'COMPRA_004': {
-        'Data'     : datetime.strptime("2025-05-25 12:00:00", "%Y-%m-%d %H:%M:%S"),
-        'Reais'    : 1081.87,
-        'Bitcoin'  : 0.00180312,
-        'Preço BTC': 600000.0,
-    },
-    'COMPRA_005': {
-        'Data'     : datetime.strptime("2025-06-01 12:00:00", "%Y-%m-%d %H:%M:%S"),
-        'Reais'    : 1144.17,
-        'Bitcoin'  : 0.00208031,
+    'VENDA_001': {
+        'Data'     : datetime.strptime("2025-03-30 12:00:00", "%Y-%m-%d %H:%M:%S"),
+        'Reais'    : 800.0,
         'Preço BTC': 550000.0,
     },
 }
