@@ -37,6 +37,9 @@ def parse_args():
     parser.add_argument("--verbose-avg", action="store_true",
                         help="Show the per-entry breakdown of the unsold-BTC "
                              "weighted-average price calculation.")
+    parser.add_argument("--verbose-alloc", action="store_true",
+                        help="Show the sale → purchase-lot allocation table "
+                             "(cheapest-cost-basis-first).")
     return parser.parse_args()
 
 
@@ -49,6 +52,9 @@ def selected_assets(asset_args):
 def main():
     args = parse_args()
     assets = selected_assets(args.asset)
+
+    if args.verbose_alloc:
+        allocate_sales(crypto_purchases, crypto_sales, verbose=True)
 
     weighted_b3 = None
     appreciation_per_date_btc = None
