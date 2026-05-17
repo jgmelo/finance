@@ -60,9 +60,8 @@ def calculate_appreciation_asset(portfolio, today_asset_value):
     Calculates:
       - Asset appreciation per date.
       - Total weighted asset appreciation using investment amounts as weights.
-        Sold investments are excluded from the weighted average, and their
-        appreciation is based on the ``sale_price`` instead of the current
-        ``today_asset_value``.
+        Sold investments contribute their realized ``sale_price`` appreciation;
+        unsold investments use the current ``today_asset_value``.
 
     Args:
         portfolio: Dictionary where keys are dates (``YYYY-MM-DD``) and values are
@@ -73,7 +72,7 @@ def calculate_appreciation_asset(portfolio, today_asset_value):
         Tuple containing:
             - Dictionary with asset appreciation per date.
             - Total weighted asset appreciation (percentage). Returns ``0`` when
-              there are no active investments.
+              the portfolio is empty.
     """
     appreciation_per_date = {}
     weighted_sum = 0
@@ -84,9 +83,9 @@ def calculate_appreciation_asset(portfolio, today_asset_value):
             appreciation = sale_price / purchase_price
         else:
             appreciation = today_asset_value / purchase_price
-            weighted_sum += purchase_price * appreciation
-            total_investment += purchase_price
 
+        weighted_sum += purchase_price * appreciation
+        total_investment += purchase_price
         appreciation_per_date[date] = appreciation
 
     weighted_appreciation = (
@@ -95,15 +94,66 @@ def calculate_appreciation_asset(portfolio, today_asset_value):
 
     return appreciation_per_date, weighted_appreciation
 
+def weighted_unsold_btc_price(crypto_purchases, crypto_sales=None, verbose=False):
+    """Weighted-average BTC buy price across unsold positions.
+
+    Σ(bitcoin_i × price_i) / Σ(bitcoin_i), restricted to purchases without a
+    matching entry in ``crypto_sales``.
+
+    Returns ``0`` when there are no unsold positions. When ``verbose`` is true,
+    prints each purchase that was considered or discarded and the running
+    numerator/denominator of the weighted average.
+    """
+    sales = crypto_sales or {}
+    total_btc = 0
+    weighted_sum = 0
+    if verbose:
+        print("Cálculo do preço médio ponderado (não vendidos):")
+        header = (f"  {'ID':<12} {'BTC':>12} {'Preço BTC':>14} "
+                  f"{'BTC × Preço':>14} {'Reais':>10} {'Status':<24}")
+        print(header)
+        print("  " + "-" * (len(header) - 2))
+    for purchase_id, entry in crypto_purchases.items():
+        btc = entry.get("Bitcoin")
+        price = entry.get("Preço BTC")
+        reais = entry.get("Reais")
+        if purchase_id in sales:
+            status = "descartado (vendido)"
+            included = False
+        elif btc is None or price is None:
+            status = "descartado (dados ausentes)"
+            included = False
+        else:
+            status = "considerado"
+            included = True
+
+        if verbose:
+            btc_str = f"{btc:.8f}" if btc is not None else "—"
+            price_str = f"{price:.2f}" if price is not None else "—"
+            product_str = f"{btc * price:.2f}" if btc is not None and price is not None else "—"
+            reais_str = f"{reais:.2f}" if reais is not None else "—"
+            print(f"  {purchase_id:<12} {btc_str:>12} {price_str:>14} "
+                  f"{product_str:>14} {reais_str:>10} {status:<24}")
+
+        if included:
+            weighted_sum += btc * price
+            total_btc += btc
+
+    avg = weighted_sum / total_btc if total_btc else 0
+    if verbose:
+        print(f"  Σ(BTC × Preço) = {weighted_sum:.2f} BRL")
+        print(f"  Σ(BTC)         = {total_btc:.8f} BTC")
+        print(f"  Média ponderada = {avg:.2f} BRL/BTC\n")
+    return avg
+
 def calculate_appreciation_index(portfolio, today_index_value):
     """Calculate index appreciation.
 
     Calculates:
       - Index appreciation per date.
       - Total weighted index appreciation using investment amounts as weights.
-        Sold investments are excluded from the weighted average, and their
-        appreciation is based on the ``sale_price`` instead of the current
-        ``today_index_value``.
+        Sold investments contribute their realized ``sale_price`` appreciation;
+        unsold investments use the current ``today_index_value``.
 
     Args:
         portfolio: Dictionary where keys are dates (``YYYY-MM-DD``) and values are
@@ -114,7 +164,7 @@ def calculate_appreciation_index(portfolio, today_index_value):
         Tuple containing:
             - Dictionary with index appreciation per date.
             - Total weighted index appreciation (percentage). Returns ``0`` when
-              there are no active investments.
+              the portfolio is empty.
     """
     appreciation_per_date = {}
     weighted_sum = 0
@@ -125,9 +175,9 @@ def calculate_appreciation_index(portfolio, today_index_value):
             appreciation = sale_price / purchase_price
         else:
             appreciation = today_index_value / purchase_price
-            weighted_sum += purchase_price * appreciation
-            total_investment += purchase_price
 
+        weighted_sum += purchase_price * appreciation
+        total_investment += purchase_price
         appreciation_per_date[date] = appreciation
 
     weighted_appreciation = (
